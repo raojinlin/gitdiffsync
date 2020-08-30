@@ -14,6 +14,7 @@ $ git diff | gitdiffapply --host <server address> --port <server port> --chdir <
 
 ### 服务器
 ```
+export PYTHONPATH=$PYTHONPATH:$(pwd)/src
 $ python3 ./src/diffsyncserver.py
 ```
 
