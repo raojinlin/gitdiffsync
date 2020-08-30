@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+
+import argparse
+import requests
+import os
+import sys
+
+
+def main(url):
+    data = b''
+    while True:
+        chunk = os.read(sys.stdin.fileno(), 1024)
+
+        if not chunk:
+            break
+        else:
+            data += chunk
+
+    res = requests.post(url, data=data, headers={"Content-Type": "text/plain"})
+    if res.status_code == 200:
+        print('apply success.')
+    else:
+        sys.stderr.write('apply failed, status code: %d\n' % res.status_code)
+
+    res.close()
+
+
+if __name__ == '__main__':
+    host = '127.0.0.1'
+    port = 5000
+    parser = argparse.ArgumentParser("git diff apply client")
+
+    parser.add_argument('--host', '-H', type=str, help='git diff sync server address(default: %s)' % host, default=host)
+    parser.add_argument('--port', '-p', type=int, help='git diff sync server port(default: %d)' % port, default=port)
+    parser.add_argument('--chdir', '-c', type=str, help='change current working directory to')
+
+    args = parser.parse_args()
+    if args.host:
+        host = args.host
+
+    if args.port:
+        port = args.port
+
+    url = 'http://%s:%d' % (host, port)
+
+    if args.chdir:
+        res = requests.get(url + "/admin/chdir", params={"dir": args.chdir})
+        if res.status_code == 200:
+            print('Change working directory success.')
+            res.close()
+        else:
+            sys.stderr.write('Change working directory failed. status code: %d\n' % res.status_code)
+            sys.stderr.write('Response data: %s\n' % res.content)
+            res.close()
+            sys.exit(1)
+
+    main(url + "/git/apply")
+
